@@ -1,0 +1,78 @@
+expname: tweet-sentiment-extraction
+device: auto
+model_name: sentiment_span_extractor
+
+hydra:
+  run:
+    dir: logs/hydra/${expname}/${now:%Y-%m-%d-%H-%M-%S}
+
+model_save_path: ./outputs
+
+# Train config
+train_config:
+  data_config:
+    train_csv: data/raw/train.csv
+    test_csv: data/raw/test.csv
+    max_len: 128
+    batch_size: 64
+    val_batch_size: 16
+    num_workers: 4
+    max_samples: null
+    val_split: 0.2
+    seed: 42
+  model_config:
+    backbone_name: "roberta-base"
+    dropout: 0.1
+    hidden_size: 768
+    use_last_two_layers: true
+    min_words_for_extraction: 2
+  learning_rate: 3.0e-5
+  weight_decay: 0.001
+  num_epochs: 5
+  accumulate_grad_batches: 1
+  accelerator: "auto"
+  devices: "auto"
+  precision: "32"
+  gradient_clip_val: 1.0
+  scheduler:
+    name: "cosine"
+    warmup_steps: 0
+  save_top_k: 1
+  training_monitoring: val_jaccard
+  training_monitoring_mode: max
+  mlflow_logging:
+    experiment_name: tweet-sentiment-extraction
+    run_name: null
+    mlflow_save_dir: "."
+    tracking_uri: http://127.0.0.1:8080
+  log_every_n_steps: 10
+  early_stopping:
+    patience: 3
+  test_data_config:
+    val_split: 0.0
+    default_root_dir: "logs"
+
+# Test config
+test_config:
+  checkpoint: null
+
+# Infer config
+infer_config:
+  input_csv: null
+  output_csv: null
+  checkpoint: null
+  min_words_for_extraction: 2
+
+# Convert config
+convert_config:
+  checkpoint: null
+  output_path: null
+  opset_version: 14
+
+# Infer Triton config
+infer_triton_config:
+  input_csv: null
+  output_csv: null
+  triton_url: "http://localhost:8000"
+  model_name: "sentiment_span_extractor"
+  min_words_for_extraction: 2
