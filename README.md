@@ -7,21 +7,25 @@
 ### Постановка задачи
 
 Дано:
+
 - Текст твита (`text`)
 - Тональность твита (`sentiment`: positive/negative/neutral)
 
 Требуется:
+
 - Найти подстроку в тексте, которая наиболее точно отражает заданную тональность (`selected_text`)
 
 ### Формат входных и выходных данных
 
 **Входные данные (train.csv):**
+
 - `textID` - идентификатор твита
 - `text` - полный текст твита
 - `sentiment` - тональность (positive/negative/neutral)
 - `selected_text` - целевая подстрока (только для обучения)
 
 **Выходные данные (inference):**
+
 - `textID` - идентификатор твита
 - `selected_text` - предсказанная подстрока
 - `start` - начальный индекс спана
@@ -30,9 +34,11 @@
 ### Метрики
 
 Основная метрика - **Jaccard Score** (коэффициент Жаккара):
+
 ```
 J(A, B) = |A ∩ B| / |A ∪ B|
 ```
+
 где A и B - множества слов в предсказанной и целевой подстроках соответственно.
 
 ### Валидация и тестирование
@@ -47,15 +53,18 @@ J(A, B) = |A ∩ B| / |A ∪ B|
 ### Модель
 
 Архитектура:
+
 - Backbone: RoBERTa-base (transformer encoder)
-- Head: Linear(hidden_size * 2 → 2) для предсказания start/end индексов
+- Head: Linear(hidden_size \* 2 → 2) для предсказания start/end индексов
 - Используются последние два слоя hidden states для лучшего качества
 
 **Baseline модель:**
+
 - Упрощенная версия: использует только последний слой hidden states (вместо двух)
 - Для обучения baseline измените `use_last_two_layers: false` в `config.yaml`
 
 Обучение:
+
 - Loss: CrossEntropy для start и end позиций
 - Optimizer: AdamW с weight decay
 - Scheduler: Cosine с warmup (опционально)
@@ -63,6 +72,7 @@ J(A, B) = |A ∩ B| / |A ∪ B|
 ### Внедрение
 
 Модель может быть использована для:
+
 - Анализа тональности в социальных сетях
 - Извлечения ключевых фраз из текста
 - Понимания причин определенной тональности
@@ -176,6 +186,7 @@ uv run main.py mode=infer \
 ### Установка
 
 #### Предварительные требования
+
 - Python >= 3.9
 - uv (менеджер зависимостей)
 - Docker и Docker Compose (для MLflow и Triton, опционально)
@@ -183,22 +194,26 @@ uv run main.py mode=infer \
 #### Детальные шаги установки
 
 1. **Клонировать репозиторий:**
+
 ```bash
 git clone https://github.com/MoiseevRoman/tweet-sentiment-span-extraction.git
 cd tweet-sentiment-span-extraction
 ```
 
 2. **Установить uv** (если еще не установлен):
+
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 3. **Установить зависимости:**
+
 ```bash
 uv sync
 ```
 
 4. **Установить pre-commit хуки** (рекомендуется):
+
 ```bash
 pre-commit install
 uv run --with pre-commit pre-commit run --all-files
@@ -211,11 +226,13 @@ uv run --with pre-commit pre-commit run --all-files
 Проект использует DVC для управления данными. Данные хранятся в публичном S3 хранилище (Yandex Object Storage).
 
 **Загрузка данных:**
+
 ```bash
 ./get_data.sh
 ```
 
 Или вручную через DVC:
+
 ```bash
 uv run dvc pull
 ```
@@ -239,6 +256,7 @@ uv run main.py mode=train \
 ```
 
 **Ожидается:**
+
 - Лосс должен убывать
 - В MLflow логируются: `train_loss`, `val_loss`, `val_jaccard`, `lr`
 - Логируются все гиперпараметры и git commit id
@@ -254,10 +272,11 @@ uv run main.py mode=train \
 #### Baseline модель
 
 Для обучения упрощенной baseline модели измените в `config.yaml`:
+
 ```yaml
 train_config:
   model_config:
-    use_last_two_layers: false  # Использует только последний слой
+    use_last_two_layers: false # Использует только последний слой
 ```
 
 #### Настройка параметров обучения
@@ -284,11 +303,13 @@ uv run main.py mode=infer \
 ```
 
 **Формат входного CSV:**
+
 - `textID` (опционально)
 - `text` - текст твита
 - `sentiment` - тональность (positive/negative/neutral)
 
 **Формат выходного CSV:**
+
 - `textID`
 - `selected_text` - предсказанная подстрока
 - `start` - начальный индекс
@@ -322,11 +343,13 @@ uv run main.py mode=convert \
 1. **Конвертировать модель в ONNX** (см. выше)
 
 2. **Запустить Triton:**
+
 ```bash
 docker compose up -d triton
 ```
 
 3. **Выполнить инференс:**
+
 ```bash
 uv run main.py mode=infer-triton \
     infer_triton_config.input_csv=path/to/input.csv \
@@ -340,6 +363,7 @@ uv run main.py mode=infer-triton \
 Для просмотра метрик и экспериментов:
 
 1. **Запустить MLflow через docker-compose:**
+
 ```bash
 docker compose up -d mlflow postgres
 ```
@@ -347,6 +371,7 @@ docker compose up -d mlflow postgres
 2. **Открыть в браузере:** http://localhost:8080
 
 **В MLflow логируются:**
+
 - Метрики: `train_loss`, `val_loss`, `val_jaccard`, `lr`
 - Гиперпараметры (все из конфигов)
 - Git commit ID
@@ -356,6 +381,7 @@ docker compose up -d mlflow postgres
 Все команды используют **Hydra** для управления конфигурацией. Есть два способа запуска:
 
 1. **Через main.py (рекомендуется):**
+
    ```bash
    uv run main.py mode=train train_config.data_config.max_samples=1500
    ```
@@ -428,6 +454,7 @@ uv run --with pytest pytest tests/ -v
 ```
 
 Или через Make:
+
 ```bash
 make test
 ```
@@ -444,6 +471,7 @@ prettier --write "**/*.{md,json,yaml}"
 ```
 
 Или через Make:
+
 ```bash
 make lint      # Проверка
 make format    # Автофикс
