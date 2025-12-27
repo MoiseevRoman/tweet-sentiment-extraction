@@ -117,7 +117,7 @@ docker compose up -d mlflow postgres
 **Вариант A: Debug режим (CPU, быстрая проверка)**
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.data_config.max_samples=1500 \
     train_config.num_epochs=2 \
     train_config.accelerator=cpu \
@@ -127,7 +127,7 @@ uv run main.py train \
 **Вариант B: Полное обучение (GPU)**
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.accelerator=gpu \
     train_config.precision=16-mixed
 ```
@@ -135,7 +135,7 @@ uv run main.py train \
 **Вариант C: Обучение с кастомными параметрами**
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.learning_rate=5e-5 \
     train_config.num_epochs=10 \
     train_config.data_config.batch_size=32
@@ -147,8 +147,8 @@ uv run main.py train \
 
 ```bash
 # Заменить на имя вашей обученной модели
-uv run main.py test \
-    --checkpoint sentiment_span_extractor_0.7000.ckpt
+uv run main.py mode=test \
+    test_config.checkpoint=sentiment_span_extractor_0.7000.ckpt
 ```
 
 #### Шаг 6: Инференс на новых данных
@@ -161,10 +161,10 @@ uv run main.py test \
 # "This is terrible",negative
 
 # Выполнить инференс
-uv run main.py infer \
-    --checkpoint sentiment_span_extractor_0.7000.ckpt \
-    --input-csv input.csv \
-    --output-csv outputs/predictions.csv
+uv run main.py mode=infer \
+    infer_config.checkpoint=sentiment_span_extractor_0.7000.ckpt \
+    infer_config.input_csv=input.csv \
+    infer_config.output_csv=outputs/predictions.csv
 
 # Результаты будут в outputs/predictions.csv
 ```
@@ -231,7 +231,7 @@ uv run dvc pull
 Для быстрой проверки работоспособности на небольшом датасете:
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.data_config.max_samples=1500 \
     train_config.num_epochs=2 \
     train_config.accelerator=cpu \
@@ -246,7 +246,7 @@ uv run main.py train \
 #### Полное обучение (GPU)
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.accelerator=gpu \
     train_config.precision=16-mixed
 ```
@@ -265,7 +265,7 @@ train_config:
 Все параметры настраиваются в `config.yaml`. Можно переопределять через CLI:
 
 ```bash
-uv run main.py train \
+uv run main.py mode=train \
     train_config.learning_rate=5e-5 \
     train_config.num_epochs=10 \
     train_config.data_config.batch_size=32 \
@@ -277,10 +277,10 @@ uv run main.py train \
 Для предсказания на новых данных:
 
 ```bash
-uv run main.py infer \
-    --checkpoint sentiment_span_extractor_0.7000.ckpt \
-    --input-csv path/to/input.csv \
-    --output-csv outputs/pred.csv
+uv run main.py mode=infer \
+    infer_config.checkpoint=sentiment_span_extractor_0.7000.ckpt \
+    infer_config.input_csv=path/to/input.csv \
+    infer_config.output_csv=outputs/pred.csv
 ```
 
 **Формат входного CSV:**
@@ -299,8 +299,8 @@ uv run main.py infer \
 Для тестирования обученной модели на тестовом датасете:
 
 ```bash
-uv run main.py test \
-    --checkpoint sentiment_span_extractor_0.7000.ckpt
+uv run main.py mode=test \
+    test_config.checkpoint=sentiment_span_extractor_0.7000.ckpt
 ```
 
 ### Конвертация в ONNX
@@ -308,9 +308,9 @@ uv run main.py test \
 Для конвертации модели в формат ONNX:
 
 ```bash
-uv run main.py convert \
-    --checkpoint sentiment_span_extractor_0.7000.ckpt \
-    --output-path triton/models/sentiment_span_extractor/1/model.onnx
+uv run main.py mode=convert \
+    convert_config.checkpoint=sentiment_span_extractor_0.7000.ckpt \
+    convert_config.output_path=triton/models/sentiment_span_extractor/1/model.onnx
 ```
 
 Если `--output-path` не указан, модель будет сохранена в `triton/models/sentiment_span_extractor/1/model.onnx`.
@@ -328,11 +328,11 @@ docker compose up -d triton
 
 3. **Выполнить инференс:**
 ```bash
-uv run main.py infer-triton \
-    --input-csv path/to/input.csv \
-    --output-csv outputs/pred.csv \
-    --triton-url http://localhost:8000 \
-    --model-name sentiment_span_extractor
+uv run main.py mode=infer-triton \
+    infer_triton_config.input_csv=path/to/input.csv \
+    infer_triton_config.output_csv=outputs/pred.csv \
+    infer_triton_config.triton_url=http://localhost:8000 \
+    infer_triton_config.model_name=sentiment_span_extractor
 ```
 
 ### MLflow
@@ -351,11 +351,27 @@ docker compose up -d mlflow postgres
 - Гиперпараметры (все из конфигов)
 - Git commit ID
 
+### Использование Hydra
+
+Все команды используют **Hydra** для управления конфигурацией. Есть два способа запуска:
+
+1. **Через main.py (рекомендуется):**
+   ```bash
+   uv run main.py mode=train train_config.data_config.max_samples=1500
+   ```
+
+2. **Напрямую через скрипты:**
+   ```bash
+   uv run sentiment_span_extractor/train.py train_config.data_config.max_samples=1500
+   ```
+
+Все параметры настраиваются в `config.yaml` и могут быть переопределены через CLI используя синтаксис Hydra: `section.parameter=value`.
+
 ### Структура проекта
 
 ```
 tweet-sentiment-span-extraction/
-├── main.py                        # Точка входа
+├── main.py                        # Точка входа (использует Hydra)
 ├── config.yaml                    # Главный конфиг Hydra
 ├── sentiment_span_extractor/     # Основной пакет
 │   ├── train.py                   # Скрипт для тренировки

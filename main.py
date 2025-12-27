@@ -1,151 +1,45 @@
-import argparse
-import subprocess
+import sys
+
+import hydra
+from omegaconf import DictConfig
+
+from sentiment_span_extractor.convert import convert_main
+from sentiment_span_extractor.infer import infer_main
+from sentiment_span_extractor.infer_triton import infer_triton_main
+from sentiment_span_extractor.test import test_main
+
+# Импортируем функции main из скриптов (без декоратора @hydra.main)
+from sentiment_span_extractor.train import train_main
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Запуск процессов обучения, тестирования и инференса модели извлечения спанов из твитов"
-    )
+@hydra.main(version_base=None, config_path=".", config_name="config")
+def main(config: DictConfig):
+    mode = config.get("mode", None)
 
-    subparsers = parser.add_subparsers(dest="mode", required=True)
+    if mode is None:
+        print("Usage: uv run main.py mode=<train|test|infer|convert|infer-triton> [additional hydra args]")
+        print("\nExamples:")
+        print("  uv run main.py mode=train train_config.data_config.max_samples=1500")
+        print("  uv run main.py mode=test test_config.checkpoint=model.ckpt")
+        print("  uv run main.py mode=infer infer_config.checkpoint=model.ckpt infer_config.input_csv=input.csv infer_config.output_csv=output.csv")
+        print("  uv run main.py mode=convert convert_config.checkpoint=model.ckpt")
+        print("  uv run main.py mode=infer-triton infer_triton_config.input_csv=input.csv infer_triton_config.output_csv=output.csv")
+        sys.exit(1)
 
-    # --- TRAIN ---
-    train_parser = subparsers.add_parser("train", help="Запуск обучения (train.py)")
-    # Аргументы Hydra будут переданы как позиционные аргументы
-
-    # --- TEST ---
-    test_parser = subparsers.add_parser("test", help="Запуск тестирования (test.py)")
-    test_parser.add_argument(
-        "--checkpoint", type=str, required=True, help="Путь к модели", metavar=""
-    )
-
-    # --- INFER ---
-    infer_parser = subparsers.add_parser("infer", help="Запуск инференса (infer.py)")
-    infer_parser.add_argument(
-        "--checkpoint", type=str, required=True, help="Путь к модели", metavar=""
-    )
-    infer_parser.add_argument(
-        "--input-csv",
-        type=str,
-        required=True,
-        help="Путь к входному CSV файлу",
-        metavar="",
-    )
-    infer_parser.add_argument(
-        "--output-csv",
-        type=str,
-        required=True,
-        help="Путь к выходному CSV файлу",
-        metavar="",
-    )
-
-    # --- CONVERT ---
-    convert_parser = subparsers.add_parser(
-        "convert", help="Запуск конвертации в ONNX (convert.py)"
-    )
-    convert_parser.add_argument(
-        "--checkpoint", type=str, required=True, help="Путь к модели", metavar=""
-    )
-    convert_parser.add_argument(
-        "--output-path",
-        type=str,
-        required=False,
-        default=None,
-        help="Путь сохранения ONNX модели",
-        metavar="",
-    )
-
-    # --- INFER TRITON ---
-    infer_triton_parser = subparsers.add_parser(
-        "infer-triton", help="Инференс через Triton"
-    )
-    infer_triton_parser.add_argument(
-        "--input-csv",
-        type=str,
-        required=True,
-        help="Путь к входному CSV файлу",
-        metavar="",
-    )
-    infer_triton_parser.add_argument(
-        "--output-csv",
-        type=str,
-        required=True,
-        help="Путь к выходному CSV файлу",
-        metavar="",
-    )
-    infer_triton_parser.add_argument(
-        "--triton-url",
-        type=str,
-        required=False,
-        default="http://localhost:8000",
-        help="URL Triton сервера",
-        metavar="",
-    )
-    infer_triton_parser.add_argument(
-        "--model-name",
-        type=str,
-        required=False,
-        default="sentiment_span_extractor",
-        help="Имя модели в Triton",
-        metavar="",
-    )
-
-    args, unknown_args = parser.parse_known_args()
-
-    # --- ROUTING ---
-    if args.mode == "train":
-        cmd = [
-            "uv",
-            "run",
-            "sentiment_span_extractor/train.py",
-        ]
-        # Передаем все неизвестные аргументы в train.py (это аргументы Hydra)
-        cmd.extend(unknown_args)
-        subprocess.run(cmd)
-
-    elif args.mode == "test":
-        subprocess.run(
-            [
-                "uv",
-                "run",
-                "sentiment_span_extractor/test.py",
-                f"test_config.checkpoint={args.checkpoint}",
-            ]
-        )
-
-    elif args.mode == "infer":
-        subprocess.run(
-            [
-                "uv",
-                "run",
-                "sentiment_span_extractor/infer.py",
-                f"infer_config.checkpoint={args.checkpoint}",
-                f"infer_config.input_csv={args.input_csv}",
-                f"infer_config.output_csv={args.output_csv}",
-            ]
-        )
-    elif args.mode == "convert":
-        cmd = [
-            "uv",
-            "run",
-            "sentiment_span_extractor/convert.py",
-            f"convert_config.checkpoint={args.checkpoint}",
-        ]
-        if args.output_path:
-            cmd.append(f"convert_config.output_path={args.output_path}")
-        subprocess.run(cmd)
-    elif args.mode == "infer-triton":
-        subprocess.run(
-            [
-                "uv",
-                "run",
-                "sentiment_span_extractor/infer_triton.py",
-                f"infer_triton_config.input_csv={args.input_csv}",
-                f"infer_triton_config.output_csv={args.output_csv}",
-                f"infer_triton_config.triton_url={args.triton_url}",
-                f"infer_triton_config.model_name={args.model_name}",
-            ]
-        )
+    if mode == "train":
+        train_main(config)
+    elif mode == "test":
+        test_main(config)
+    elif mode == "infer":
+        infer_main(config)
+    elif mode == "convert":
+        convert_main(config)
+    elif mode == "infer-triton":
+        infer_triton_main(config)
+    else:
+        print(f"Unknown mode: {mode}")
+        print("Available modes: train, test, infer, convert, infer-triton")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

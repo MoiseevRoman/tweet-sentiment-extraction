@@ -44,7 +44,7 @@ jobs:
 
       - name: Debug train (CPU)
         run: |
-          uv run main.py train \
+          uv run main.py mode=train \
             train_config.data_config.max_samples=1500 \
             train_config.num_epochs=2 \
             train_config.accelerator=cpu \

@@ -1,3 +1,4 @@
+mode: null  # train, test, infer, convert, infer-triton
 expname: tweet-sentiment-extraction
 device: auto
 model_name: sentiment_span_extractor

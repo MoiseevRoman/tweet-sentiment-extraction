@@ -10,8 +10,7 @@ from sentiment_span_extractor.models.span_module import SpanExtractionModule
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="..", config_name="config")
-def main(config: DictConfig):
+def convert_main(config: DictConfig):
     logging.basicConfig(level=logging.INFO)
 
     if config.convert_config.checkpoint is None:
@@ -61,6 +60,11 @@ def main(config: DictConfig):
     )
 
     logger.info(f"Model exported successfully to {output_path}")
+
+
+@hydra.main(version_base=None, config_path="..", config_name="config")
+def main(config: DictConfig):
+    convert_main(config)
 
 
 if __name__ == "__main__":

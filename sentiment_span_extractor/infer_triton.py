@@ -18,8 +18,7 @@ from sentiment_span_extractor.utils.dvc_utils import ensure_data
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="..", config_name="config")
-def main(config: DictConfig):
+def infer_triton_main(config: DictConfig):
     if not TRITON_AVAILABLE:
         raise ImportError(
             "Triton client not available. Install with: pip install tritonclient[http]"
@@ -125,6 +124,11 @@ def main(config: DictConfig):
     output_df.to_csv(output_path, index=False)
 
     logger.info(f"Predictions saved to {output_path}")
+
+
+@hydra.main(version_base=None, config_path="..", config_name="config")
+def main(config: DictConfig):
+    infer_triton_main(config)
 
 
 if __name__ == "__main__":

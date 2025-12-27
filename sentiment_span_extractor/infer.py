@@ -13,8 +13,7 @@ from sentiment_span_extractor.utils.dvc_utils import ensure_data
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="..", config_name="config")
-def main(config: DictConfig):
+def infer_main(config: DictConfig):
     logging.basicConfig(level=logging.INFO)
 
     if config.infer_config.input_csv is None:
@@ -106,6 +105,11 @@ def main(config: DictConfig):
     output_df.to_csv(output_path, index=False)
 
     logger.info(f"Predictions saved to {output_path}")
+
+
+@hydra.main(version_base=None, config_path="..", config_name="config")
+def main(config: DictConfig):
+    infer_main(config)
 
 
 if __name__ == "__main__":

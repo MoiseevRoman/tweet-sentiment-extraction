@@ -12,8 +12,7 @@ from sentiment_span_extractor.utils.dvc_utils import ensure_data
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="..", config_name="config")
-def main(config: DictConfig):
+def test_main(config: DictConfig):
     logging.basicConfig(level=logging.INFO)
 
     print("===============================")
@@ -64,6 +63,11 @@ def main(config: DictConfig):
     logger.info("Starting test...")
     results = trainer.test(model, datamodule)
     logger.info(f"Test results: {results}")
+
+
+@hydra.main(version_base=None, config_path="..", config_name="config")
+def main(config: DictConfig):
+    test_main(config)
 
 
 if __name__ == "__main__":

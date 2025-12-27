@@ -18,8 +18,7 @@ from sentiment_span_extractor.utils.seed import set_seed
 logger = logging.getLogger(__name__)
 
 
-@hydra.main(version_base=None, config_path="..", config_name="config")
-def main(config: DictConfig):
+def train_main(config: DictConfig):
     logging.basicConfig(level=logging.INFO)
 
     train_cfg = config.train_config
@@ -119,6 +118,11 @@ def main(config: DictConfig):
 
     logger.info(f"Best model saved at: {checkpoint_callback.best_model_path}")
     mlflow.end_run()
+
+
+@hydra.main(version_base=None, config_path="..", config_name="config")
+def main(config: DictConfig):
+    train_main(config)
 
 
 if __name__ == "__main__":
