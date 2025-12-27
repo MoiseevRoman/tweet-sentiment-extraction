@@ -1,0 +1,10 @@
+stages:
+  download:
+    cmd: |
+      mkdir -p data/raw
+      curl -o data/raw/train.csv https://storage.yandexcloud.net/hw2-mlops-data/train.csv
+      curl -o data/raw/test.csv https://storage.yandexcloud.net/hw2-mlops-data/test.csv
+    deps: []
+    outs:
+      - data/raw/train.csv
+      - data/raw/test.csv

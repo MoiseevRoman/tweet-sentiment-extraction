@@ -1,0 +1,14 @@
+schema: '2.0'
+stages:
+  download:
+    cmd: "mkdir -p data/raw\ncurl -o data/raw/train.csv https://storage.yandexcloud.net/hw2-mlops-data/train.csv\n\
+      curl -o data/raw/test.csv https://storage.yandexcloud.net/hw2-mlops-data/test.csv\n"
+    outs:
+    - path: data/raw/test.csv
+      hash: md5
+      md5: fbf0a1f6ddd2a5e452bf63f08695f614
+      size: 313984
+    - path: data/raw/train.csv
+      hash: md5
+      md5: aa8a4b0f80d7185983bcf1cd2c95aa3e
+      size: 3501243
