@@ -75,8 +75,8 @@ J(A, B) = |A ∩ B| / |A ∪ B|
 
 ```bash
 # Клонирование репозитория
-git clone https://github.com/MoiseevRoman/tweet-sentiment-span-extraction.git
-cd tweet-sentiment-span-extraction
+git clone https://github.com/MoiseevRoman/tweet-sentiment-extraction.git
+cd tweet-sentiment-extraction
 
 # Установка uv (менеджер зависимостей)
 curl -LsSf https://astral.sh/uv/install.sh | sh

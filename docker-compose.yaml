@@ -9,10 +9,20 @@ services:
     ports:
       - "8080:5000"
     environment:
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: 23wesdxc
-      MLFLOW_TRACKING_URI: "http://localhost:8080"
-    entrypoint: bash -c "mlflow server --backend-store-uri postgresql://postgres:postgres@postgres:5432/postgres --host 0.0.0.0 --port 5000"
+      # Настройки S3 для Yandex Cloud
+      AWS_ACCESS_KEY_ID: ${YANDEX_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${YANDEX_SECRET_ACCESS_KEY}
+      MLFLOW_S3_ENDPOINT_URL: "https://storage.yandexcloud.net"
+      # Обязательно укажите бакет для артефактов
+      MLFLOW_ARTIFACT_ROOT: "s3://ваш-бакет-имя/artifacts"
+    entrypoint: >
+      bash -c "
+        mlflow server
+        --backend-store-uri postgresql://postgres:postgres@postgres:5432/postgres
+        --default-artifact-root s3://ваш-бакет-имя/artifacts
+        --host 0.0.0.0
+        --port 5000
+      "
 
   postgres:
     image: postgres:16.3-alpine
