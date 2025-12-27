@@ -86,7 +86,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # 3. Установить зависимости
 uv sync
 
-# 4. Установить pre-commit хуки (опционально, но рекомендуется)
+# 4. Установить pre-commit хуки
 pre-commit install
 ```
 
